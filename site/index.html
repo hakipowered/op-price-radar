@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>OP Price Radar</title>
+<meta name="description" content="One Piece TCG price database, movers, set heat map and a Courtyard listing checker. Updated daily.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <h1>OP Price Radar</h1>
+        <p class="asof" id="asof">Loading prices…</p>
+      </div>
+    </div>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch theme" title="Switch theme"></button>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="market" aria-selected="true">Market</button>
+    <button role="tab" data-tab="movers" aria-selected="false">Movers</button>
+    <button role="tab" data-tab="sets" aria-selected="false">Sets</button>
+    <button role="tab" data-tab="check" aria-selected="false">Courtyard Check</button>
+    <button role="tab" data-tab="watch" aria-selected="false">Watchlist <span class="count" id="watchCount"></span></button>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section id="tab-market" class="panel" role="tabpanel">
+    <p class="pulse" id="pulse"></p>
+    <div class="filters">
+      <label class="field grow">
+        <span class="lbl">Search</span>
+        <input id="q" type="search" placeholder="Name or number, e.g. Luffy or OP05-119" autocomplete="off">
+      </label>
+      <label class="field">
+        <span class="lbl">Set</span>
+        <select id="setSel"><option value="">All sets</option></select>
+      </label>
+      <label class="field">
+        <span class="lbl">Sort</span>
+        <select id="sortSel">
+          <option value="price">Price, high to low</option>
+          <option value="c7">7-day change</option>
+          <option value="c30">30-day change</option>
+          <option value="c1">1-day change</option>
+          <option value="number">Card number</option>
+          <option value="name">Name</option>
+        </select>
+      </label>
+      <label class="field small">
+        <span class="lbl">Min $</span>
+        <input id="minPx" type="number" min="0" step="1" inputmode="decimal" placeholder="0">
+      </label>
+    </div>
+    <div class="chips" id="typeChips" role="group" aria-label="Item type">
+      <button class="chip" data-type="all" aria-pressed="true">All</button>
+      <button class="chip" data-type="single" aria-pressed="false">Singles</button>
+      <button class="chip" data-type="sealed" aria-pressed="false">Sealed</button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <button class="chip" id="chaseChip" aria-pressed="false">Chase cards only</button>
+      <span class="chip-sep" aria-hidden="true"></span>
+      <span class="chip-group" id="rarChips" role="group" aria-label="Rarity"></span>
+    </div>
+    <div class="result-count" id="resultCount"></div>
+    <div class="list" id="marketList"></div>
+    <button class="more" id="moreBtn" type="button" hidden>Show more</button>
+  </section>
+
+  <section id="tab-movers" class="panel" role="tabpanel" hidden>
+    <div class="filters">
+      <div class="field">
+        <span class="lbl">Period</span>
+        <div class="seg" id="periodSeg" role="group" aria-label="Period">
+          <button data-p="c1" aria-pressed="false">1 day</button>
+          <button data-p="c7" aria-pressed="true">7 days</button>
+          <button data-p="c30" aria-pressed="false">30 days</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lbl">Show</span>
+        <div class="seg" id="moverType" role="group" aria-label="Item type">
+          <button data-type="single" aria-pressed="true">Singles</button>
+          <button data-type="sealed" aria-pressed="false">Sealed</button>
+          <button data-type="all" aria-pressed="false">All</button>
+        </div>
+      </div>
+      <label class="field small">
+        <span class="lbl">Min $</span>
+        <input id="moverMin" type="number" min="0" step="1" value="5" inputmode="decimal">
+      </label>
+      <label class="check">
+        <input type="checkbox" id="moverChase"> Chase cards only
+      </label>
+    </div>
+    <p class="hint" id="moverHint"></p>
+    <div class="mover-cols">
+      <div class="mover-col">
+        <h2>Heating up</h2>
+        <p class="col-note">Up over both 7 and 30 days. The closest thing to "everyone wants this".</p>
+        <div class="list compact" id="hotList"></div>
+      </div>
+      <div class="mover-col">
+        <h2>Biggest risers</h2>
+        <p class="col-note">Check Courtyard before sellers there catch up.</p>
+        <div class="list compact" id="upList"></div>
+      </div>
+      <div class="mover-col">
+        <h2>Biggest fallers</h2>
+        <p class="col-note">Avoid overpaying: Courtyard listings can lag a fall.</p>
+        <div class="list compact" id="downList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-sets" class="panel" role="tabpanel" hidden>
+    <div class="filters">
+      <div class="field">
+        <span class="lbl">Order</span>
+        <div class="seg" id="setSort" role="group" aria-label="Order sets by">
+          <button data-s="date" aria-pressed="true">Newest first</button>
+          <button data-s="c7" aria-pressed="false">7-day change</button>
+          <button data-s="c30" aria-pressed="false">30-day change</button>
+          <button data-s="v" aria-pressed="false">Value</button>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Each set's index is the combined market price of its 20 most valuable singles. Tint shows the 7-day move.</p>
+    <div class="set-grid" id="setGrid"></div>
+  </section>
+
+  <section id="tab-check" class="panel" role="tabpanel" hidden>
+    <div class="check-layout">
+      <form class="check-form" id="checkForm" autocomplete="off">
+        <h2>Check a Courtyard listing</h2>
+        <p class="col-note">Type what you see on Courtyard. Nothing is sent anywhere.</p>
+        <label class="field">
+          <span class="lbl">Card or product</span>
+          <input id="ckQuery" type="search" placeholder="Start typing a name or number">
+        </label>
+        <div class="suggest" id="ckSuggest" role="listbox" hidden></div>
+        <div class="picked" id="ckPicked" hidden></div>
+        <div class="field">
+          <span class="lbl">Condition on Courtyard</span>
+          <div class="seg" id="ckKind" role="group" aria-label="Condition">
+            <button type="button" data-kind="raw" aria-pressed="true">Raw</button>
+            <button type="button" data-kind="sealed" aria-pressed="false">Sealed</button>
+            <button type="button" data-kind="graded" aria-pressed="false">Graded</button>
+          </div>
+        </div>
+        <div class="graded-row" id="gradedRow" hidden>
+          <label class="field">
+            <span class="lbl">Grader</span>
+            <select id="ckGrader"><option>PSA</option><option>CGC</option><option>BGS</option><option>SGC</option></select>
+          </label>
+          <label class="field">
+            <span class="lbl">Grade</span>
+            <select id="ckGrade"><option>10</option><option>9.5</option><option>9</option><option>8.5</option><option>8</option><option>7</option></select>
+          </label>
+          <label class="field grow">
+            <span class="lbl">Recent sale for this grade ($)</span>
+            <input id="ckComp" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Optional">
+          </label>
+        </div>
+        <div class="two">
+          <label class="field">
+            <span class="lbl">Listed price ($)</span>
+            <input id="ckPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 24.50">
+          </label>
+          <label class="field">
+            <span class="lbl">Top offer ($)</span>
+            <input id="ckOffer" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Optional">
+          </label>
+        </div>
+        <details class="margins" id="marginBox">
+          <summary>Your margins</summary>
+          <div class="two">
+            <label class="field"><span class="lbl">Offer at (% of market)</span><input id="mOffer" type="number" min="1" max="100" step="1"></label>
+            <label class="field"><span class="lbl">Pay at most (%)</span><input id="mMax" type="number" min="1" max="150" step="1"></label>
+            <label class="field"><span class="lbl">Resell at (%)</span><input id="mResell" type="number" min="1" max="150" step="1"></label>
+            <label class="field"><span class="lbl">Selling fee (%)</span><input id="mFee" type="number" min="0" max="50" step="0.5"></label>
+          </div>
+          <p class="col-note">Defaults suit Courtyard's 20–25% gaps between offers and listings. Courtyard advertises 0% marketplace fees; confirm on your first sale.</p>
+        </details>
+      </form>
+      <div class="verdict-card" id="verdict" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="tab-watch" class="panel" role="tabpanel" hidden>
+    <div class="watch-layout">
+      <div>
+        <h2>Watchlist</h2>
+        <div class="list" id="watchList"></div>
+      </div>
+      <aside class="alerts-box">
+        <h3>Telegram alerts</h3>
+        <p>Your daily Telegram digest checks the watchlist saved in your GitHub project. After changing targets here, copy the list and paste it over the contents of <code>watchlist.json</code>.</p>
+        <div class="alerts-actions">
+          <button class="btn" id="copyWatch" type="button">Copy alert list</button>
+          <a class="btn ghost" id="editWatch" href="#" target="_blank" rel="noopener">Open watchlist.json</a>
+        </div>
+        <p class="col-note" id="copyNote"></p>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <p>Prices: TCGplayer market data via <a href="https://tcgcsv.com" target="_blank" rel="noopener">tcgcsv.com</a>, refreshed daily. English cards and sealed product only; graded and Japanese prices are not included yet. Not affiliated with Courtyard or TCGplayer. Not financial advice.</p>
+</footer>
+
+<dialog class="sheet" id="detail" aria-labelledby="dTitle">
+  <div class="sheet-inner" id="detailBody"></div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

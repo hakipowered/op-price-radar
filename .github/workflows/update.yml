@@ -1,0 +1,75 @@
+name: Daily price update
+
+on:
+  schedule:
+    # tcgcsv refreshes around 20:00 UTC; run after that (00:17 Bahrain time).
+    - cron: "17 21 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "scripts/**"
+      - "watchlist.json"
+      - ".github/workflows/update.yml"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: price-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch prices and build site data
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Only send the Telegram digest on the scheduled daily run.
+          SEND_DIGEST: ${{ github.event_name == 'schedule' }}
+        run: |
+          if [ "$SEND_DIGEST" = "true" ]; then
+            python scripts/update.py
+          else
+            python scripts/update.py --no-telegram
+          fi
+
+      - name: Save today's snapshot
+        run: |
+          git config user.name "op-price-radar bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/snapshots
+          if git diff --cached --quiet; then
+            echo "No new snapshot."
+          else
+            git commit -m "Price snapshot $(date -u +%F)"
+            git pull --rebase origin main
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
