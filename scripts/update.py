@@ -142,6 +142,12 @@ def backfill(today: dt.date, repo: str) -> None:
     sess = requests.Session()
     sess.headers["User-Agent"] = USER_AGENT.format(repo=repo)
     started = time.time()
+    log: list[str] = []
+
+    def note(msg: str) -> None:
+        print(msg)
+        log.append(msg)
+
     for off in BACKFILL_OFFSETS:
         if time.time() - started > 25 * 60:
             print("  backfill: time budget used, history will fill in daily from here")
@@ -154,7 +160,7 @@ def backfill(today: dt.date, repo: str) -> None:
             arc = tmp / "a.7z"
             with sess.get(ARCHIVE.format(date=day.isoformat()), stream=True, timeout=300) as r:
                 if r.status_code != 200:
-                    print(f"  backfill {day}: archive not available ({r.status_code})")
+                    note(f"backfill {day}: HTTP {r.status_code} from {r.url}")
                     continue
                 with open(arc, "wb") as f:
                     for chunk in r.iter_content(1 << 20):
@@ -170,7 +176,7 @@ def backfill(today: dt.date, repo: str) -> None:
                     z.extract(path=out, targets=targets)
                 extracted = True
             except Exception as exc:  # noqa: BLE001
-                print(f"  backfill {day}: py7zr failed ({exc}), trying 7z")
+                note(f"backfill {day}: py7zr failed ({exc!r}), trying 7z")
             if not extracted and shutil.which("7z"):
                 subprocess.run(["7z", "x", f"-o{out}", str(arc), f"*/{CATEGORY}/*/prices", "-r", "-y"],
                                check=False, capture_output=True)
@@ -180,13 +186,17 @@ def backfill(today: dt.date, repo: str) -> None:
                     prices.update(price_rows_to_map(json.loads(f.read_text()).get("results", [])))
                 except Exception:  # noqa: BLE001
                     pass
+            files = list(out.rglob("prices"))
+            note(f"backfill {day}: {arc.stat().st_size} bytes, {len(files)} price files, "
+                 f"{len(prices)} One Piece prices, sample path {files[0].relative_to(out) if files else '-'}")
             if prices:
                 write_snapshot(day, prices)
-                print(f"  backfill {day}: {len(prices)} prices")
         except Exception as exc:  # noqa: BLE001
-            print(f"  backfill {day}: skipped ({exc})")
+            note(f"backfill {day}: skipped ({exc!r})")
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
+    (ROOT / "data").mkdir(exist_ok=True)
+    (ROOT / "data" / "backfill.log").write_text("\n".join(log) + "\n")
 
 
 # ---------------------------------------------------------------- main build
