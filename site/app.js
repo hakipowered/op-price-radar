@@ -35,10 +35,10 @@
   }
 
   // ---------------------------------------------------------------- domain
-  const RAR_ORDER = ['L', 'SEC', 'SP', 'TR', 'SR', 'R', 'UC', 'C', 'P', 'PR', 'DON'];
-  const RAR_NAME = { L: 'Leader', SEC: 'Secret Rare', SP: 'Special', TR: 'Treasure Rare', SR: 'Super Rare', R: 'Rare', UC: 'Uncommon', C: 'Common', P: 'Promo', PR: 'Promo', DON: 'DON!!' };
+  const RAR_ORDER = ['L', 'SEC', 'SP', 'TR', 'SR', 'R', 'UC', 'C', 'P', 'PR', 'DON!!'];
+  const RAR_NAME = { L: 'Leader', SEC: 'Secret Rare', SP: 'Special', TR: 'Treasure Rare', SR: 'Super Rare', R: 'Rare', UC: 'Uncommon', C: 'Common', P: 'Promo', PR: 'Promo', 'DON!!': 'DON!! card' };
   const CHASE_R = new Set(['SEC', 'SP', 'SP CARD', 'TR', 'MR']);
-  const CHASE_NAME = /parallel|alternate art|manga|\(sp\)|treasure|gold|serial|wanted/i;
+  const CHASE_NAME = /parallel|alternate art|manga|\(sp\)|\(tr\)|treasure|gold|serial|wanted|special foil/i;
   const isChase = it => it.t === 'single' && (CHASE_R.has(it.r) || CHASE_NAME.test(it.n));
 
   // ---------------------------------------------------------------- state

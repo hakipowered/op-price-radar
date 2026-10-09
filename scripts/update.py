@@ -201,7 +201,8 @@ def backfill(today: dt.date, repo: str) -> None:
 
 # ---------------------------------------------------------------- main build
 def classify(product: dict) -> str:
-    return SINGLE if ext(product, "Number") else SEALED
+    # Cards carry a number or rarity (DON!! cards have a rarity but no number).
+    return SINGLE if ext(product, "Number") or ext(product, "Rarity") else SEALED
 
 
 def load_history(today: dt.date) -> tuple[list[str], dict[str, dict[str, float]]]:
