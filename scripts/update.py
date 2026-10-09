@@ -412,8 +412,8 @@ def main() -> None:
     site_url = os.environ.get("SITE_URL", f"https://{owner}.github.io/{name}/")
     today = dt.date.fromisoformat(args.date) if args.date else dt.datetime.now(dt.timezone.utc).date()
 
-    if args.fixtures is None:
-        backfill(today, repo)
+    # Note: tcgcsv's history archives refuse automated downloads (HTTP 403), so
+    # backfill() is not called. History builds from the daily snapshots instead.
     cards = build(Source(args.fixtures, repo), args.out, today, repo)
     text = digest(cards, site_url)
     print(text)

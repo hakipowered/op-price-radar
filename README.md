@@ -22,7 +22,7 @@ A daily-updated price radar for One Piece Card Game cards and sealed product, bu
 3. builds the site's data files and publishes the site to GitHub Pages,
 4. sends the Telegram digest if alerts are set up.
 
-On the very first run it also pulls a spread of past days from tcgcsv's daily archives, so changes and charts work straight away.
+History builds from the first run: 1-day changes appear after the second day, 7-day after a week, 30-day after a month.
 
 You can run it by hand any time: **Actions → Daily price update → Run workflow**.
 
