@@ -368,6 +368,32 @@ input::placeholder { color: var(--muted); }
   .sheet { width: 100%; }
 }
 .px small.c7m { display: none; }
+
+/* ---------- v2: game picker, unpriced rows, disabled periods */
+.top-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.game-pick select {
+  height: 38px; border-radius: 19px; padding: 0 30px 0 14px; border: 1px solid var(--line-2);
+  background: var(--surface); font: 600 14px var(--f-body); max-width: 52vw;
+}
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.row.unpriced .px { color: var(--muted); }
+.row.unpriced .nm { color: var(--ink-2); }
+.seg button:disabled { opacity: .45; cursor: not-allowed; }
+.set-moves span { opacity: .7; }
+.set-moves span.on { opacity: 1; font-weight: 600; }
+.wt-target .lbl { display: block; margin-bottom: 4px; }
+.suggest .s-name { display: block; }
+.suggest .s-sub { display: block; }
+.foot p + p { border-top: 0; padding-top: 8px; }
+@media (max-width: 720px) {
+  .filters > .field:not(.small) { flex: 1 1 42%; }
+}
+@media (max-width: 520px) {
+  .top-inner { flex-wrap: wrap; }
+  .top-actions { width: 100%; }
+  .game-pick { flex: 1; }
+  .game-pick select { width: 100%; max-width: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .sheet[open] { animation: none; }
 }

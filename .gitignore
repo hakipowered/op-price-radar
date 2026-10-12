@@ -1,5 +1,6 @@
 site/data/
+history/
 __pycache__/
 *.pyc
 .venv/
-tests/out/
+tests/fixtures/

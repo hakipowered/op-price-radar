@@ -25,10 +25,12 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,6 +40,12 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Download price history
+        run: |
+          mkdir -p history
+          gh release download price-history --repo "$GITHUB_REPOSITORY" --dir history --pattern 'history-*.csv.gz' \
+            || echo "No stored history yet."
 
       - name: Fetch prices and build site data
         env:
@@ -52,15 +60,20 @@ jobs:
             python scripts/update.py --no-telegram
           fi
 
-      - name: Save today's snapshot
+      - name: Save price history
         run: |
-          git config user.name "op-price-radar bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data
-          if git diff --cached --quiet; then
-            echo "No new snapshot."
-          else
-            git commit -m "Price snapshot $(date -u +%F)"
+          gh release view price-history --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create price-history --repo "$GITHUB_REPOSITORY" --title "Price history" \
+                 --notes "Rolling daily price history used by the site. Updated automatically. Do not delete." --latest=false
+          gh release upload price-history history/history-*.csv.gz --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Remove old snapshot files
+        run: |
+          if [ -d data/snapshots ]; then
+            git config user.name "op-price-radar bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git rm -r -q data/snapshots
+            git commit -m "Move price history to release storage"
             git pull --rebase origin main
             git push
           fi

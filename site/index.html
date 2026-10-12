@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>OP Price Radar</title>
-<meta name="description" content="One Piece TCG price database, movers, set heat map and a Courtyard listing checker. Updated daily.">
+<title>TCG Price Radar</title>
+<meta name="description" content="One Piece and Pokémon card prices, movers, set heat map and a Courtyard listing checker. Updated daily.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -16,11 +16,17 @@
     <div class="brand">
       <span class="brand-mark" aria-hidden="true"></span>
       <div>
-        <h1>OP Price Radar</h1>
+        <h1>Price Radar</h1>
         <p class="asof" id="asof">Loading prices…</p>
       </div>
     </div>
-    <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch theme" title="Switch theme"></button>
+    <div class="top-actions">
+      <label class="game-pick">
+        <span class="visually-hidden">Game</span>
+        <select id="gameSel" aria-label="Game"></select>
+      </label>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch theme" title="Switch theme"></button>
+    </div>
   </div>
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button role="tab" data-tab="market" aria-selected="true">Market</button>
@@ -37,11 +43,15 @@
     <div class="filters">
       <label class="field grow">
         <span class="lbl">Search</span>
-        <input id="q" type="search" placeholder="Name or number, e.g. Luffy or OP05-119" autocomplete="off">
+        <input id="q" type="search" placeholder="Name, number or Courtyard title, e.g. #OP01-120 Shanks Parallel" autocomplete="off">
       </label>
       <label class="field">
         <span class="lbl">Set</span>
         <select id="setSel"><option value="">All sets</option></select>
+      </label>
+      <label class="field">
+        <span class="lbl">Rarity</span>
+        <select id="rarSel"><option value="">All rarities</option></select>
       </label>
       <label class="field">
         <span class="lbl">Sort</span>
@@ -60,13 +70,12 @@
       </label>
     </div>
     <div class="chips" id="typeChips" role="group" aria-label="Item type">
-      <button class="chip" data-type="all" aria-pressed="true">All</button>
-      <button class="chip" data-type="single" aria-pressed="false">Singles</button>
-      <button class="chip" data-type="sealed" aria-pressed="false">Sealed</button>
+      <button class="chip" type="button" data-type="all" aria-pressed="true">All</button>
+      <button class="chip" type="button" data-type="single" aria-pressed="false">Singles</button>
+      <button class="chip" type="button" data-type="sealed" aria-pressed="false">Sealed</button>
       <span class="chip-sep" aria-hidden="true"></span>
-      <button class="chip" id="chaseChip" aria-pressed="false">Chase cards only</button>
-      <span class="chip-sep" aria-hidden="true"></span>
-      <span class="chip-group" id="rarChips" role="group" aria-label="Rarity"></span>
+      <button class="chip" type="button" id="chaseChip" aria-pressed="false">Chase cards only</button>
+      <button class="chip" type="button" id="pricedChip" aria-pressed="false">Priced only</button>
     </div>
     <div class="result-count" id="resultCount"></div>
     <div class="list" id="marketList"></div>
@@ -78,17 +87,17 @@
       <div class="field">
         <span class="lbl">Period</span>
         <div class="seg" id="periodSeg" role="group" aria-label="Period">
-          <button data-p="c1" aria-pressed="false">1 day</button>
-          <button data-p="c7" aria-pressed="true">7 days</button>
-          <button data-p="c30" aria-pressed="false">30 days</button>
+          <button type="button" data-p="c1" aria-pressed="false">1 day</button>
+          <button type="button" data-p="c7" aria-pressed="true">7 days</button>
+          <button type="button" data-p="c30" aria-pressed="false">30 days</button>
         </div>
       </div>
       <div class="field">
         <span class="lbl">Show</span>
         <div class="seg" id="moverType" role="group" aria-label="Item type">
-          <button data-type="single" aria-pressed="true">Singles</button>
-          <button data-type="sealed" aria-pressed="false">Sealed</button>
-          <button data-type="all" aria-pressed="false">All</button>
+          <button type="button" data-type="single" aria-pressed="true">Singles</button>
+          <button type="button" data-type="sealed" aria-pressed="false">Sealed</button>
+          <button type="button" data-type="all" aria-pressed="false">All</button>
         </div>
       </div>
       <label class="field small">
@@ -122,27 +131,40 @@
   <section id="tab-sets" class="panel" role="tabpanel" hidden>
     <div class="filters">
       <div class="field">
-        <span class="lbl">Order</span>
-        <div class="seg" id="setSort" role="group" aria-label="Order sets by">
-          <button data-s="date" aria-pressed="true">Newest first</button>
-          <button data-s="c7" aria-pressed="false">7-day change</button>
-          <button data-s="c30" aria-pressed="false">30-day change</button>
-          <button data-s="v" aria-pressed="false">Value</button>
+        <span class="lbl">Change over</span>
+        <div class="seg" id="setPeriod" role="group" aria-label="Change period">
+          <button type="button" data-p="c1" aria-pressed="false">1 day</button>
+          <button type="button" data-p="c7" aria-pressed="true">7 days</button>
+          <button type="button" data-p="c30" aria-pressed="false">30 days</button>
         </div>
       </div>
+      <div class="field">
+        <span class="lbl">Order</span>
+        <div class="seg" id="setSort" role="group" aria-label="Order sets by">
+          <button type="button" data-s="date" aria-pressed="true">Newest</button>
+          <button type="button" data-s="up" aria-pressed="false">Rising</button>
+          <button type="button" data-s="down" aria-pressed="false">Falling</button>
+          <button type="button" data-s="v" aria-pressed="false">Value</button>
+        </div>
+      </div>
+      <label class="field grow">
+        <span class="lbl">Find a set</span>
+        <input id="setQ" type="search" placeholder="Set name or code" autocomplete="off">
+      </label>
     </div>
-    <p class="hint">Each set's index is the combined market price of its 20 most valuable singles. Tint shows the 7-day move.</p>
+    <p class="hint" id="setHint"></p>
     <div class="set-grid" id="setGrid"></div>
+    <button class="more" id="setMore" type="button" hidden>Show more sets</button>
   </section>
 
   <section id="tab-check" class="panel" role="tabpanel" hidden>
     <div class="check-layout">
       <form class="check-form" id="checkForm" autocomplete="off">
         <h2>Check a Courtyard listing</h2>
-        <p class="col-note">Type what you see on Courtyard. Nothing is sent anywhere.</p>
+        <p class="col-note">Type or paste what you see on Courtyard. Nothing is sent anywhere.</p>
         <label class="field">
           <span class="lbl">Card or product</span>
-          <input id="ckQuery" type="search" placeholder="Start typing a name or number">
+          <input id="ckQuery" type="search" placeholder="Paste the Courtyard title or type a name">
         </label>
         <div class="suggest" id="ckSuggest" role="listbox" hidden></div>
         <div class="picked" id="ckPicked" hidden></div>
@@ -196,12 +218,13 @@
   <section id="tab-watch" class="panel" role="tabpanel" hidden>
     <div class="watch-layout">
       <div>
-        <h2>Watchlist</h2>
+        <h2 id="watchTitle">Watchlist</h2>
         <div class="list" id="watchList"></div>
       </div>
       <aside class="alerts-box">
         <h3>Telegram alerts</h3>
-        <p>Your daily Telegram digest checks the watchlist saved in your GitHub project. After changing targets here, copy the list and paste it over the contents of <code>watchlist.json</code>.</p>
+        <p>Your daily Telegram digest checks the watchlist saved in your GitHub project. After changing targets here, copy the list and paste it over the contents of <code>watchlist.json</code>. The list covers every game you watch.</p>
+        <p>That file is public, so anyone can see which cards you watch and your target prices.</p>
         <div class="alerts-actions">
           <button class="btn" id="copyWatch" type="button">Copy alert list</button>
           <a class="btn ghost" id="editWatch" href="#" target="_blank" rel="noopener">Open watchlist.json</a>
@@ -213,7 +236,8 @@
 </main>
 
 <footer class="foot wrap">
-  <p>Prices: TCGplayer market data via <a href="https://tcgcsv.com" target="_blank" rel="noopener">tcgcsv.com</a>, refreshed daily. English cards and sealed product only; graded and Japanese prices are not included yet. Not affiliated with Courtyard or TCGplayer. Not financial advice.</p>
+  <p id="coverage"></p>
+  <p>Prices: TCGplayer market data via <a href="https://tcgcsv.com" target="_blank" rel="noopener">tcgcsv.com</a>, refreshed daily. Raw cards and sealed product; graded prices are not included. Not affiliated with Courtyard or TCGplayer. Not financial advice.</p>
 </footer>
 
 <dialog class="sheet" id="detail" aria-labelledby="dTitle">
