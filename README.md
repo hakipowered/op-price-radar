@@ -15,7 +15,7 @@ A daily-updated price radar for One Piece Card Game cards and sealed product, bu
 
 ## How it updates
 
-`.github/workflows/update.yml` runs every day at 21:17 UTC (00:17 in Bahrain), after tcgcsv.com refreshes its TCGplayer data. It:
+`.github/workflows/update.yml` runs every day at 21:17 UTC, after tcgcsv.com refreshes its TCGplayer data. It:
 
 1. fetches all One Piece prices (`scripts/update.py`),
 2. saves a compact daily snapshot in `data/snapshots/` (this is the price history),

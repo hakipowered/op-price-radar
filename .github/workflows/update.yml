@@ -2,7 +2,7 @@ name: Daily price update
 
 on:
   schedule:
-    # tcgcsv refreshes around 20:00 UTC; run after that (00:17 Bahrain time).
+    # tcgcsv refreshes around 20:00 UTC; run after that.
     - cron: "17 21 * * *"
   workflow_dispatch:
   push:
